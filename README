@@ -1,0 +1,9 @@
+Java AppEngine Channel Client
+
+This directory contains a simple framework that allows you to interact with Google AppEngine Channels from a Java client.
+
+Jacc - Is the actual framework.
+
+ChannelExample - This is a sample Java client demonstrating how the Jacc framework is used.
+
+ChatChannelServer - Is a sample server.  If you are using Eclipse be sure to go into properties after importing and set the Google AppEngine version property per your local dev environment.  We've tested on version 1.6.1, but it should work on earlier versions as well.
