@@ -49,7 +49,7 @@ public class ChannelAPI {
     	this.channelId = createChannel(channelKey);
     	this.applicationKey = channelKey;
     	
-    	if (channelListener != null) {
+    	if (channelService != null) {
             this.channelListener = channelService;
         }
     }
@@ -233,4 +233,14 @@ public class ChannelAPI {
         HttpGet httpGet = new HttpGet(url);
         return new XHR(httpClient.execute(httpGet));
     }
+	
+	/**
+	 * Set a new ChannelListener
+	 * @param channelListener
+	 */
+	public void setChannelListener(ChannelService channelListener) {
+	    if (channelListener != null) {
+		    this.channelListener = channelListener;
+		}
+	}
 }
