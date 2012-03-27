@@ -19,6 +19,7 @@ public class ChatServlet extends HttpServlet {
     
     //Send a message based on the 'channelKey' any channel with this key will receive the message
     ChannelService channelService = ChannelServiceFactory.getChannelService();
+    
 	channelService.sendMessage(new ChannelMessage(channelKey, message));
   }
 }
