@@ -1,21 +1,27 @@
 package edu.gvsu.cis.masl.chat;
 
-import java.io.*; 
+import java.io.*;
+
+import org.apache.http.client.ClientProtocolException;
+
 import edu.gvsu.cis.masl.channelAPI.ChannelAPI;
+import edu.gvsu.cis.masl.channelAPI.ChannelAPI.ChannelException;
+
 
 public class ChatExample {
 	ChatListener chatListener = new ChatListener();
-	ChannelAPI channel;
+	ChannelAPI channel = new ChannelAPI();
 	
 	/**
 	 * Create and Start Listening to your channel
 	 */
 	public ChatExample(){
 		try {
-			channel = new ChannelAPI("http://localhost:8888", "key", chatListener);
+			channel = new ChannelAPI("http://example.appspot.com", "key", chatListener); //Production Example
+			//channel = new ChannelAPI("http://localhost:8888", "key", chatListener);    //Local Dev Example
 			channel.open();
-		} catch (IOException e) {
-			System.out.println("Oops, had trouble reading...");
+		} catch (Exception e){
+			System.out.println("Something went wrong...");
 		}
 	}
 
@@ -35,6 +41,19 @@ public class ChatExample {
 			} catch (IOException e) {
 				System.out.println("Problem grabbing user input!");
 			} 
+		}
+		this.close();
+	}
+	
+	/**
+	 * Closes the channel
+	 * @throws ChannelException 
+	 */
+	public void close(){
+		try {
+			channel.close();
+		} catch (Exception e){
+			System.out.println("Problem Closing Channel");
 		}
 	}
 	
