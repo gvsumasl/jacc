@@ -24,7 +24,7 @@ import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URLEncodedUtils;
-import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -46,7 +46,7 @@ public class ChannelAPI {
     private ChannelService channelListener = new ChannelListener();
     private ReadyState readyState = ReadyState.CLOSED;
     private Integer TIMEOUT_MS = 500;
-    private HttpClient httpClient = new DefaultHttpClient();
+    private HttpClient httpClient = HttpClientBuilder.create().build();
     private Thread thPoll = null;
     
     /**
@@ -113,7 +113,7 @@ public class ChannelAPI {
      */
     private String createChannel(String key) throws IOException, ClientProtocolException{
     	String token = "";
-		HttpClient staticClient = new DefaultHttpClient();
+		HttpClient staticClient = HttpClientBuilder.create().build();
 		HttpGet httpGet = new HttpGet(BASE_URL + "/token?c=" + key);
 		try{
 			XHR xhr = new XHR(staticClient.execute(httpGet));
@@ -821,7 +821,7 @@ public class ChannelAPI {
      * @throws IOException
      */
     private XHR sendPost(String url, List<NameValuePair> params) throws IOException {
-    	HttpClient sendClient = new DefaultHttpClient();
+    	HttpClient sendClient = HttpClientBuilder.create().build();
     	UrlEncodedFormEntity entity = new UrlEncodedFormEntity(params, "UTF-8");
         HttpPost httpPost = new HttpPost(url);
         httpPost.setEntity(entity);
