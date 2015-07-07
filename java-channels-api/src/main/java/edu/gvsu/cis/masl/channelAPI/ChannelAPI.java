@@ -1,17 +1,5 @@
 package edu.gvsu.cis.masl.channelAPI;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.StringReader;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.StringUtils;
@@ -28,6 +16,13 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.io.*;
+import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ChannelAPI {
 	
@@ -547,6 +542,12 @@ public class ChannelAPI {
                     entries.add(new TalkMessageEntry(MessageEntryKind.ME_STRING, stringValue));
                 } else if (ch == ',') {
                     // blank entry
+                    entries.add(new TalkMessageEntry(MessageEntryKind.ME_EMPTY, null));
+                } else if (ch == 'n' || ch == 'N') { //'n' as in "null" or "Null":
+                    // blank entry
+                    ch=reader.read(); //'u'
+                    ch=reader.read(); //'l'
+                    ch=reader.read(); //'l'
                     entries.add(new TalkMessageEntry(MessageEntryKind.ME_EMPTY, null));
                 } else {
                     // we assume it's a number
