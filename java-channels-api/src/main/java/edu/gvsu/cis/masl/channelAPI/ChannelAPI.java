@@ -38,7 +38,7 @@ public class ChannelAPI {
     private String sessionId = null;
     private String SID = null;
     private long messageId = 1;
-    private ChannelService channelListener = new ChannelListener();
+    private ChannelService channelListener = new DefaultChannelListener();
     private ReadyState readyState = ReadyState.CLOSED;
     private Integer TIMEOUT_MS = 500;
     private HttpClient httpClient = HttpClientBuilder.create().build();
