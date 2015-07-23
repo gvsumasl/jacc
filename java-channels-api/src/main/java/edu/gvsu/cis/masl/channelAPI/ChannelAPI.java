@@ -75,7 +75,7 @@ public class ChannelAPI {
     	this.channelId = createChannel(channelKey);
     	this.applicationKey = channelKey;
     	
-    	if (channelListener != null) {
+    	if (channelService != null) {
             this.channelListener = channelService;
         }
     }
@@ -94,7 +94,7 @@ public class ChannelAPI {
         
         
         this.applicationKey = this.channelId.substring(this.channelId.lastIndexOf("-") + 1);
-        if (channelListener != null) {
+        if (channelService != null) {
             this.channelListener = channelService;
         }
     }
