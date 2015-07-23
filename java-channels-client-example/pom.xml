@@ -9,7 +9,7 @@
   <parent>
     <groupId>edu.gvsu.cis.masl</groupId>
 	<artifactId>java-channels</artifactId>
-	<version>0.1-SNAPSHOT</version>
+	<version>0.2-SNAPSHOT</version>
   </parent>
   
   <artifactId>java-channels-client-example</artifactId>
