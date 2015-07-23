@@ -38,7 +38,7 @@ public class ChannelAPI {
     private String sessionId = null;
     private String SID = null;
     private long messageId = 1;
-    private ChannelService channelListener = new DefaultChannelListener();
+    private ChannelListener channelListener = new DefaultChannelListener();
     private ReadyState readyState = ReadyState.CLOSED;
     private Integer TIMEOUT_MS = 500;
     private HttpClient httpClient = HttpClientBuilder.create().build();
@@ -58,16 +58,16 @@ public class ChannelAPI {
     }
     
     /**
-     * Create A Channel, Using URL, ChannelKey and a ChannelService
+     * Create A Channel, Using URL, ChannelKey and a ChannelListener
      * @param URL - Server Location - http://localhost:8888
      * @param channelKey - Unique Identifier for channel groups, server uses this to push data to clients, can have multiple
      *  clients on the same key, but only 1 channel per client
-     * @param channelService - An Implementation of the ChannelService class, this is where the function methods will get called when
+     * @param channelListener - An Implementation of the ChannelListener class, this is where the function methods will get called when
      *  the server pushes data
      * @throws IOException JSON Related
      * @throws ClientProtocolException Connection Related
      */
-    public ChannelAPI(String URL, String channelKey, ChannelService channelService) throws IOException, ClientProtocolException {
+    public ChannelAPI(String URL, String channelKey, ChannelListener channelListener) throws IOException, ClientProtocolException {
     	this.clientId = null;
     	this.BASE_URL = URL;
     	this.requestId = 0;
@@ -75,27 +75,27 @@ public class ChannelAPI {
     	this.channelId = createChannel(channelKey);
     	this.applicationKey = channelKey;
     	
-    	if (channelService != null) {
-            this.channelListener = channelService;
+    	if (channelListener != null) {
+            this.channelListener = channelListener;
         }
     }
     
     /**
-     * Ability to join an existing Channel with a full channel token, URL, and ChannelService
+     * Ability to join an existing Channel with a full channel token, URL, and ChannelListener
      * @param URL - Server Location - http://localhost:8888
      * @param token - Unique token returned by the App-Engine server implementation from a previously created channel
-     * @param channelService - An Implementation of the ChannelService class, this is where the function methods will get called when
+     * @param channelListener - An Implementation of the ChannelListener class, this is where the function methods will get called when
      *  the server pushes data
      */
-    public void joinChannel(String URL, String token, ChannelService channelService) {
+    public void joinChannel(String URL, String token, ChannelListener channelListener) {
     	this.clientId = null;
     	this.BASE_URL = URL;
         this.channelId = token;
         
         
         this.applicationKey = this.channelId.substring(this.channelId.lastIndexOf("-") + 1);
-        if (channelService != null) {
-            this.channelListener = channelService;
+        if (channelListener != null) {
+            this.channelListener = channelListener;
         }
     }
     
@@ -853,7 +853,7 @@ public class ChannelAPI {
 	 * Set a new ChannelListener
 	 * @param channelListener
 	 */
-	public void setChannelListener(ChannelService channelListener) {
+	public void setChannelListener(ChannelListener channelListener) {
 	    if (channelListener != null) {
 		    this.channelListener = channelListener;
 		}
