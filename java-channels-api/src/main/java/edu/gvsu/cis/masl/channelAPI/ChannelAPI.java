@@ -313,7 +313,7 @@ public class ChannelAPI {
         }
 
         this.thPoll = new Thread(new Runnable() {
-            private TalkMessageParser repoll() {
+            private TalkMessageParser poll() {
                 String bindString = getBindString(new BasicNameValuePair("CI", "0"),
                         new BasicNameValuePair("AID", Long.toString(messageId)),
                         new BasicNameValuePair("TYPE", "xmlhttp"),
@@ -335,15 +335,24 @@ public class ChannelAPI {
             @Override
             public void run() {
                 TalkMessageParser parser = null;
+                int parserRepolls=0;
+                parser = poll();
                 while (readyState.equals(ReadyState.OPEN)) {
                     if (parser == null) {
-                        parser = repoll();
-                        if (parser == null) {
+                        if(parserRepolls<3) {
                             try {
                                 Thread.sleep(2500);
                             } catch (InterruptedException e) {
                             }
+                            parser = poll();
+                            parserRepolls++;
+                            continue;
+                        } else {
+                            channelListener.onError(500, "Parser poll failed "+String.valueOf(parserRepolls)+" times in a row!");
+                            return;
                         }
+                    } else {
+                        parserRepolls=0;
                     }
                     try {
                         TalkMessage msg = parser.getMessage();
