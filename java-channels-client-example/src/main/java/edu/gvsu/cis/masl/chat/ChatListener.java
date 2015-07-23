@@ -1,8 +1,8 @@
 package edu.gvsu.cis.masl.chat;
 
-import edu.gvsu.cis.masl.channelAPI.ChannelService;
+import edu.gvsu.cis.masl.channelAPI.ChannelListener;
 
-public class ChatListener implements ChannelService{
+public class ChatListener implements ChannelListener {
 
 	/**
 	 * Method gets called when we initially connect to the server

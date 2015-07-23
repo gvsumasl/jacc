@@ -1,40 +1,29 @@
 package edu.gvsu.cis.masl.channelAPI;
 
-public class ChannelListener implements ChannelService{
-    /**
-     * Called when we open a connection to the server
-     */
-	@Override
-    public void onOpen() {
-        System.out.println("Channel Opened!");
-        System.out.println("This is the \"Defualt Class\" You Should Realy Implement Your Own Version of \"ChannelService\" :-)");
-    }
-
-	/**
-     * Called when we receive a message from the server
-     */
-    @Override
-    public void onMessage(String message) {
-        System.out.println("Message: " + message);
-        System.out.println("This is the \"Defualt Class\" You Should Realy Implement Your Own Version of \"ChannelService\" :-)");
-    }
-    
-    /**
-     * Called when we close the channel to the server
-     */
-    @Override
-    public void onClose() {
-        System.out.println("Channel Closed!");
-        System.out.println("This is the \"Defualt Class\" You Should Realy Implement Your Own Version of \"ChannelService\" :-)");
-    }
-
-    /**
-     * Called when we receive an error message from the server
-     */
-	@Override
-	public void onError(Integer errorCode, String description) {
-		System.out.println("Channel Error");
-		System.out.println("Error Occured: " + description + " Error Code:" + errorCode);
-		System.out.println("This is the \"Defualt Class\" You Should Realy Implement Your Own Version of \"ChannelService\" :-)");
-	}
+public interface ChannelListener {
+        /**
+         * Set this to a function called when the socket is ready to receive messages.
+         */
+		void onOpen();
+		
+		/**
+		 * Set this to a function called when the socket receives a message. 
+		 * The function is passed one parameter: a message object. 
+		 * The data field of this object is the string passed to the send_message method on the server.
+		 * @param message
+		 */
+        void onMessage(String message);
+        
+        /**
+         * Close the socket. The socket cannot be used again after calling close; the server must create a new socket.
+         */
+        void onClose();
+        
+        /**
+         * Set this property to a function that called when the socket is closed. When the socket is closed, 
+         * it cannot be reopened. Use the open() method on a goog.appengine.Channel object to create a new socket.
+         * @param errorCode
+         * @param description
+         */
+        void onError(Integer errorCode, String description);
 };
