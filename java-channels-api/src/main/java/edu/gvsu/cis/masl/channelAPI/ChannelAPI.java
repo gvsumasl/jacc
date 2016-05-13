@@ -65,9 +65,8 @@ public class ChannelAPI {
      * @param channelListener - An Implementation of the ChannelListener class, this is where the function methods will get called when
      *  the server pushes data
      * @throws IOException JSON Related
-     * @throws ClientProtocolException Connection Related
      */
-    public ChannelAPI(String URL, String channelKey, ChannelListener channelListener) throws IOException, ClientProtocolException {
+    public ChannelAPI(String URL, String channelKey, ChannelListener channelListener) throws IOException {
     	this.clientId = null;
     	this.BASE_URL = URL;
     	this.requestId = 0;
@@ -104,9 +103,8 @@ public class ChannelAPI {
      * @param key
      * @return String: Channel 'Token/ID'
      * @throws IOException
-     * @throws ClientProtocolException
      */
-    private String createChannel(String key) throws IOException, ClientProtocolException{
+    private String createChannel(String key) throws IOException {
     	String token = "";
 		HttpClient staticClient = HttpClientBuilder.create().build();
 		HttpGet httpGet = new HttpGet(BASE_URL + "/token?c=" + key);
