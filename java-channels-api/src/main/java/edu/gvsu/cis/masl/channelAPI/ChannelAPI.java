@@ -72,8 +72,7 @@ public class ChannelAPI {
     	this.requestId = 0;
     	this.messageId = 1;
     	this.channelId = createChannel(channelKey);
-    	this.applicationKey = channelKey;
-    	
+
     	if (channelListener != null) {
             this.channelListener = channelListener;
         }
@@ -90,8 +89,7 @@ public class ChannelAPI {
     	this.clientId = null;
     	this.BASE_URL = URL;
         this.channelId = token;
-        
-        
+
         this.applicationKey = this.channelId.substring(this.channelId.lastIndexOf("-") + 1);
         if (channelListener != null) {
             this.channelListener = channelListener;
@@ -112,13 +110,20 @@ public class ChannelAPI {
 			XHR xhr = new XHR(staticClient.execute(httpGet));
 			System.out.println(xhr.getResponseText());
 			JSONObject json = new JSONObject(xhr.getResponseText());
+		    	applicationKey = json.getString("channelKey");
 			token = json.getString("token");
 		} catch (JSONException e) {
 			System.out.println("Error: Parsing JSON");
 		}
     	return token;
     }
-    
+
+    /**
+     * @return the application's channel key
+     */
+    public String getApplicationKey() {
+	return applicationKey;
+    }
 
     /**
      * Connect to the Channel
