@@ -810,12 +810,24 @@ public class ChannelAPI {
      * @throws IOException
      */
     public boolean send(String message, String urlPattern) throws IOException {
+    	return send(message, applicationKey, urlPattern);
+    }
+
+    /**
+     * Used to send a message to the server
+     * @param message
+     * @param channelKey
+     * @param urlPattern - where the server should look for the message. ex: "/chat"
+     * @return true
+     * @throws IOException
+     */
+    public boolean send(String message, String channelKey, String urlPattern) throws IOException {
     	if (this.readyState != ReadyState.OPEN) {
             return false;
         }
         String url = BASE_URL + urlPattern;
         List<NameValuePair> params = new ArrayList<NameValuePair>();
-        params.add(new BasicNameValuePair("channelKey", this.applicationKey));
+        params.add(new BasicNameValuePair("channelKey", channelKey));
         params.add(new BasicNameValuePair("message", message));
         forwardSendComplete(sendPost(url, params));
         return true;
