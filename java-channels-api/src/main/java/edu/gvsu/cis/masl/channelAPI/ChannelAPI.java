@@ -311,11 +311,11 @@ public class ChannelAPI {
      * Grabbing Data "Production" Path
      */
     private void longPoll() {
-        if (this.thPoll != null) {
+        if (thPoll != null) {
             return;
         }
 
-        this.thPoll = new Thread(new Runnable() {
+        thPoll = new Thread() {
             private TalkMessageParser poll() {
                 String bindString = getBindString(new BasicNameValuePair("CI", "0"),
                         new BasicNameValuePair("AID", Long.toString(messageId)),
@@ -372,10 +372,11 @@ public class ChannelAPI {
                     }
                }
            }
-        });
+        };
 
         readyState = ReadyState.OPEN;
-        this.thPoll.start();
+        thPoll.setDaemon(true);
+        thPoll.start();
     }
 
     /**
@@ -777,7 +778,7 @@ public class ChannelAPI {
      */
     private void poll() {
         if (thPoll == null) {
-            thPoll = new Thread(new Runnable() {
+            thPoll = new Thread() {
 
                 @Override
                 public void run() {
@@ -792,7 +793,8 @@ public class ChannelAPI {
                     }
                 }
 
-            });
+            };
+            thPoll.setDaemon(true);
             thPoll.start();
         }
     }
