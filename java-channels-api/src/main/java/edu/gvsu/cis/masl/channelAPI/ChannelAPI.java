@@ -31,30 +31,23 @@ public class ChannelAPI {
     private String BASE_URL = "http://localhost:8888"; //Defaults to LocalHost
     private final String CHANNEL_URL = "/_ah/channel/";
     private final String PROD_TALK_URL = "https://talkgadget.google.com/talkgadget/";
-    private String channelId = null;
-    private String applicationKey = null;
-    private String clientId = null;
-    private Integer requestId = 0;
-    private String sessionId = null;
-    private String SID = null;
+    private String channelId;
+    private String applicationKey;
+    private String clientId;
+    private int requestId;
+    private String sessionId;
+    private String SID;
     private long messageId = 1;
     private ChannelListener channelListener = new DefaultChannelListener();
     private ReadyState readyState = ReadyState.CLOSED;
     private Integer TIMEOUT_MS = 500;
     private HttpClient httpClient = HttpClientBuilder.create().build();
-    private Thread thPoll = null;
+    private Thread thPoll;
     
     /**
      * Default Constructor
      */
     public ChannelAPI(){
-    	this.clientId = null;
-    	this.channelId = null;
-    	this.requestId = null;
-    	this.sessionId = null;
-    	this.requestId = 0;
-    	this.messageId = 1;
-    	this.applicationKey = null;
     }
     
     /**
@@ -67,11 +60,8 @@ public class ChannelAPI {
      * @throws IOException JSON Related
      */
     public ChannelAPI(String URL, String channelKey, ChannelListener channelListener) throws IOException {
-    	this.clientId = null;
-    	this.BASE_URL = URL;
-    	this.requestId = 0;
-    	this.messageId = 1;
-    	this.channelId = createChannel(channelKey);
+    	BASE_URL = URL;
+    	channelId = createChannel(channelKey);
 
     	if (channelListener != null) {
             this.channelListener = channelListener;
@@ -86,11 +76,11 @@ public class ChannelAPI {
      *  the server pushes data
      */
     public void joinChannel(String URL, String token, ChannelListener channelListener) {
-    	this.clientId = null;
-    	this.BASE_URL = URL;
-        this.channelId = token;
+    	clientId = null;
+    	BASE_URL = URL;
+        channelId = token;
 
-        this.applicationKey = this.channelId.substring(this.channelId.lastIndexOf("-") + 1);
+        applicationKey = channelId.substring(channelId.lastIndexOf("-") + 1);
         if (channelListener != null) {
             this.channelListener = channelListener;
         }
@@ -132,17 +122,34 @@ public class ChannelAPI {
      * @throws IOException, ChannelException
      */
     public void open() throws IOException, ChannelException {
-    	this.readyState = ReadyState.CONNECTING;
-    	if(this.BASE_URL.contains("localhost")){ //Local Development Mode
+    	readyState = ReadyState.CONNECTING;
+    	if(BASE_URL.contains("localhost")){ //Local Development Mode
             connect(sendGet(getUrl("connect"))); 
     	} else { //Production - AppEngine Mode
-    		initialize();
+            initialize();
             fetchSid();
             connect();
             longPoll();
     	}
     }
-    
+
+    private void reopen() {
+        try {
+            channelId = createChannel(applicationKey);
+            clientId = null;
+            requestId = 0;
+            sessionId = null;
+            SID = null;
+            messageId = 1;
+            thPoll = null;
+            open();
+        } catch (final IOException e) {
+            e.printStackTrace();
+        } catch (final ChannelException e) {
+            channelListener.onError(500, e.getMessage());
+        }
+    }
+
     /**
      * Sets up the initial connection, passes in the token
      */
@@ -152,22 +159,22 @@ public class ChannelAPI {
         try {
 			xpc.put("cn", RandomStringUtils.random(10, true, false));
 			xpc.put("tp", "null");
-            xpc.put("lpu", this.PROD_TALK_URL + "xpc_blank");
-            xpc.put("ppu", this.BASE_URL + this.CHANNEL_URL + "xpc_blank");
+            xpc.put("lpu", PROD_TALK_URL + "xpc_blank");
+            xpc.put("ppu", BASE_URL + CHANNEL_URL + "xpc_blank");
 
 		} catch (JSONException e1) {
 			
 		}
         
         List<NameValuePair> params = new ArrayList<NameValuePair>();
-        params.add(new BasicNameValuePair("token", this.channelId));
+        params.add(new BasicNameValuePair("token", channelId));
         params.add(new BasicNameValuePair("xpc", xpc.toString()));
 
-        String initUri = this.PROD_TALK_URL + "d?" + URLEncodedUtils.format(params, "UTF-8");
+        String initUri = PROD_TALK_URL + "d?" + URLEncodedUtils.format(params, "UTF-8");
 
         HttpGet httpGet = new HttpGet(initUri);
         try {
-            HttpResponse resp = this.httpClient.execute(httpGet);
+            HttpResponse resp = httpClient.execute(httpGet);
             if (resp.getStatusLine().getStatusCode() > 299) {
                 throw new ChannelException("Initialize failed: "+resp.getStatusLine());
             }
@@ -188,11 +195,11 @@ public class ChannelAPI {
                         throw new ChannelException("Expected iteration #"+i+" to find something.");
                     }
                     if (i == 2) {
-                        this.clientId = m.group(1);
+                        clientId = m.group(1);
                     } else if (i == 3) {
-                        this.sessionId = m.group(1);
+                        sessionId = m.group(1);
                     } else if (i == 6) {
-                        if (!this.channelId.equals(m.group(1))) {
+                        if (!channelId.equals(m.group(1))) {
                             throw new ChannelException("Tokens do not match!");
                         }
                     }
@@ -222,7 +229,7 @@ public class ChannelAPI {
 
         TalkMessageParser parser = null;
         try {
-            HttpResponse resp = this.httpClient.execute(httpPost);
+            HttpResponse resp = httpClient.execute(httpPost);
             parser = new TalkMessageParser(resp);
             TalkMessage msg = parser.getMessage();
 
@@ -234,7 +241,7 @@ public class ChannelAPI {
                             entries.get(0).getStringValue());
             }
 
-            this.SID = entries.get(1).getStringValue();
+            SID = entries.get(1).getStringValue();
         } catch (ClientProtocolException e) {
             throw new ChannelException(e);
         } catch (IOException e) {
@@ -252,14 +259,14 @@ public class ChannelAPI {
      * We need to make this "connect" request to set up the binding.
      */
     private void connect() throws ChannelException {
-        String uri = getBindString(new BasicNameValuePair("AID", Long.toString(this.messageId)),
+        String uri = getBindString(new BasicNameValuePair("AID", Long.toString(messageId)),
                              new BasicNameValuePair("CVER", "1"));
 
         List<NameValuePair> params = new ArrayList<NameValuePair>();
         params.add(new BasicNameValuePair("count", "1"));
         params.add(new BasicNameValuePair("ofs", "0"));
         params.add(new BasicNameValuePair("req0_m", "[\"connect-add-client\"]"));
-        params.add(new BasicNameValuePair("req0_c", this.clientId));
+        params.add(new BasicNameValuePair("req0_c", clientId));
         params.add(new BasicNameValuePair("req0__sc", "c"));
 
         HttpEntity entity = null;
@@ -272,7 +279,7 @@ public class ChannelAPI {
         HttpPost httpPost = new HttpPost(uri);
         httpPost.setEntity(entity);
         try {
-            HttpResponse resp = this.httpClient.execute(httpPost);
+            HttpResponse resp = httpClient.execute(httpPost);
             consume(resp.getEntity());
         } catch (ClientProtocolException e) {
             throw new ChannelException(e);
@@ -280,7 +287,7 @@ public class ChannelAPI {
             throw new ChannelException(e);
         }
 
-        this.channelListener.onOpen();
+        channelListener.onOpen();
     }
     
     /**
@@ -288,23 +295,23 @@ public class ChannelAPI {
      */
     private String getBindString(NameValuePair ... extraParams) {
         List<NameValuePair> params = new ArrayList<NameValuePair>();
-        params.add(new BasicNameValuePair("token", this.channelId));
-        params.add(new BasicNameValuePair("gsessionid", this.sessionId));
-        params.add(new BasicNameValuePair("clid", this.clientId));
+        params.add(new BasicNameValuePair("token", channelId));
+        params.add(new BasicNameValuePair("gsessionid", sessionId));
+        params.add(new BasicNameValuePair("clid", clientId));
         params.add(new BasicNameValuePair("prop", "data"));
         params.add(new BasicNameValuePair("zx", RandomStringUtils.random(12, true, false)));
         params.add(new BasicNameValuePair("t", "1"));
-        if (this.SID != null && this.SID != "") {
-            params.add(new BasicNameValuePair("SID", this.SID));
+        if (SID != null && SID != "") {
+            params.add(new BasicNameValuePair("SID", SID));
         }
         for (int i = 0; i < extraParams.length; i++) {
             params.add(extraParams[i]);
         }
 
-        params.add(new BasicNameValuePair("RID", Integer.toString(this.requestId)));
-        this.requestId ++;
+        params.add(new BasicNameValuePair("RID", Integer.toString(requestId)));
+        requestId ++;
         
-        return this.PROD_TALK_URL + "dch/bind?VER=8&" + URLEncodedUtils.format(params, "UTF-8");
+        return PROD_TALK_URL + "dch/bind?VER=8&" + URLEncodedUtils.format(params, "UTF-8");
     }
     
     /**
@@ -366,9 +373,9 @@ public class ChannelAPI {
                             handleMessage(msg);
                         }
                     } catch (ChannelException e) {
-                        channelListener.onError(500, e.getMessage());
+                        reopen();
 
-                        return;
+                        break;
                     }
                }
            }
@@ -389,7 +396,7 @@ public class ChannelAPI {
             msg = entries.get(0).getMessageValue();
 
             entries = msg.getEntries();
-            this.messageId = entries.get(0).getNumberValue();
+            messageId = entries.get(0).getNumberValue();
 
             msg = entries.get(1).getMessageValue();
             entries = msg.getEntries();
@@ -399,8 +406,8 @@ public class ChannelAPI {
                 entries = msg.getEntries();
 
                 String thisSessionID = entries.get(0).getStringValue();
-                if (!thisSessionID.equals(this.sessionId)) {
-                    this.sessionId = thisSessionID;
+                if (!thisSessionID.equals(sessionId)) {
+                    sessionId = thisSessionID;
                 }
 
                 msg = entries.get(1).getMessageValue();
@@ -408,7 +415,7 @@ public class ChannelAPI {
 
                 if (entries.get(0).getStringValue().equalsIgnoreCase("ae")) {
                     String msgValue = entries.get(1).getStringValue();
-                    this.channelListener.onMessage(msgValue);
+                    channelListener.onMessage(msgValue);
                 }
             }
         } catch (InvalidMessageException e) {
@@ -691,7 +698,7 @@ public class ChannelAPI {
      * @throws IOException
      */
     public void close() throws IOException {
-        this.readyState = ReadyState.CLOSING;
+        readyState = ReadyState.CLOSING;
         disconnect(sendGet(getUrl("disconnect")));
     }
     
@@ -721,9 +728,9 @@ public class ChannelAPI {
     private String getUrl(String command) throws IOException {
         String url = BASE_URL + CHANNEL_URL + "dev?command=" + command + "&channel=";
 
-        url += URLEncoder.encode(this.channelId, "UTF-8");
-        if (this.clientId != null) {
-            url += "&client=" + URLEncoder.encode(this.clientId, "UTF-8");
+        url += URLEncoder.encode(channelId, "UTF-8");
+        if (clientId != null) {
+            url += "&client=" + URLEncoder.encode(clientId, "UTF-8");
         }
         return url;
     };
@@ -736,15 +743,15 @@ public class ChannelAPI {
      */
     private void connect(XHR xhr) {
         if (xhr.isSuccess()) {
-            this.clientId = xhr.getResponseText();
-            this.readyState = ReadyState.OPEN;
-            this.channelListener.onOpen();
+            clientId = xhr.getResponseText();
+            readyState = ReadyState.OPEN;
+            channelListener.onOpen();
             poll();
         } else {
-            this.readyState = ReadyState.CLOSING;
-            this.channelListener.onError(xhr.getStatus(), xhr.getStatusText());
-            this.readyState = ReadyState.CLOSED;
-            this.channelListener.onClose();
+            readyState = ReadyState.CLOSING;
+            channelListener.onError(xhr.getStatus(), xhr.getStatusText());
+            readyState = ReadyState.CLOSED;
+            channelListener.onClose();
         }
     }
 
@@ -753,8 +760,8 @@ public class ChannelAPI {
      * @param xhr
      */
     private void disconnect(XHR xhr) {
-        this.readyState = ReadyState.CLOSED;
-        this.channelListener.onClose();
+        readyState = ReadyState.CLOSED;
+        channelListener.onClose();
     }
 
     /**
@@ -765,11 +772,11 @@ public class ChannelAPI {
         if (xhr.isSuccess()) {
             String data = StringUtils.chomp(xhr.getResponseText());
             if (!StringUtils.isEmpty(data)) {
-                this.channelListener.onMessage(data);
+                channelListener.onMessage(data);
             }
             poll();
         } else {
-            this.channelListener.onError(xhr.getStatus(), xhr.getStatusText());
+            channelListener.onError(xhr.getStatus(), xhr.getStatusText());
         }
     }
 
@@ -805,7 +812,7 @@ public class ChannelAPI {
      */
     private void forwardSendComplete(XHR xhr) {
         if (!xhr.isSuccess()) {
-            this.channelListener.onError(xhr.getStatus(), xhr.getStatusText());
+            channelListener.onError(xhr.getStatus(), xhr.getStatusText());
         }
     }
 
@@ -829,7 +836,7 @@ public class ChannelAPI {
      * @throws IOException
      */
     public boolean send(String message, String channelKey, String urlPattern) throws IOException {
-    	if (this.readyState != ReadyState.OPEN) {
+    	if (readyState != ReadyState.OPEN) {
             return false;
         }
         String url = BASE_URL + urlPattern;
